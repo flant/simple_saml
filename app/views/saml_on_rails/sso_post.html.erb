@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title>Single Sign on</title>
+  </head>
+  <body>
+
+    <%= form_tag saml_settings.idp_sso_target_url, method: :post do |saml_form| %>
+      <% request_params.each do |key, val| %>
+        <%= hidden_field_tag key, val %>
+      <% end %>
+    <% end %>
+
+    <script type="text/javascript">
+      window.onload = function () { document.forms[0].submit(); }
+    </script>
+
+  </body>
+</html>
