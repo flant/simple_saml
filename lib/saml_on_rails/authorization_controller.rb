@@ -40,8 +40,7 @@ module SamlOnRails
       end
 
       def metadata
-        meta = OneLogin::RubySaml::Metadata.new
-        render xml: meta.generate(saml_settings, true)
+        render xml: saml_metadata
       end
 
       def sls
@@ -54,7 +53,7 @@ module SamlOnRails
 
       # SLO or simple logout
       def logout
-        if SamlOnRails.slo_disabled? || saml_settings.idp_slo_target_url.nil?
+        if settings.slo_disabled? || saml_settings.idp_slo_target_url.nil?
           reset_session
           redirect_to after_logout_url
         else
@@ -99,11 +98,10 @@ module SamlOnRails
         end
       end
 
-      private
+      protected
 
-      def setup_session
-        request.session_options[:expire_after] = 20.minutes
-        # request.session_options[:secure] = true #TODO
+      def saml_metadata
+        @@saml_metadata ||= OneLogin::RubySaml::Metadata.new.generate(saml_settings, true)
       end
 
       def url_by_relay_state
@@ -118,8 +116,12 @@ module SamlOnRails
         @current_user = SamlOnRails.user_class.handle_user_data(response.nameid, attrs)
       end
 
+      def settings
+        @@settings ||= SamlOnRails::Settings.new(request)
+      end
+
       def saml_settings
-        @saml_settings ||= SamlOnRails::saml_settings(request.protocol + request.host)
+        self.settings.saml_settings
       end
 
       def after_login_url
