@@ -54,7 +54,7 @@ module SamlOnRails
 
       # SLO or simple logout
       def logout
-        if SamlOnRails.slo_disabled || saml_settings.idp_slo_target_url.nil?
+        if SamlOnRails.slo_disabled? || saml_settings.idp_slo_target_url.nil?
           reset_session
           redirect_to after_logout_url
         else
@@ -99,10 +99,12 @@ module SamlOnRails
         end
       end
 
-      def setup_session
-      end
-
       private
+
+      def setup_session
+        request.session_options[:expire_after] = 20.minutes
+        # request.session_options[:secure] = true #TODO
+      end
 
       def url_by_relay_state
         if params[:RelayState].present?

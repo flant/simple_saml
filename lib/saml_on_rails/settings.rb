@@ -33,6 +33,10 @@ module SamlOnRails
     settings
   end
 
+  def slo_disabled?
+    @slo_disabled ||= get_setting(:slo_disabled, false)
+  end
+
   protected
 
   def get_setting(key, default = nil)

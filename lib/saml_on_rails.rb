@@ -4,11 +4,10 @@ require_relative 'saml_on_rails/routing_mapper'
 require_relative 'saml_on_rails/response_handler'
 
 module SamlOnRails
-  mattr_accessor :user_class, :user_key, :slo_disabled
+  mattr_accessor :user_class, :user_key
 
   @@user_class = nil
   @@user_key = :uuid
-  @@slo_disabled = :false
 
   def self.config
     @@configured = true
