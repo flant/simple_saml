@@ -59,7 +59,7 @@ module SimpleSaml
         return render_logout_failure("Logout failed") unless session[:nameid].present?
 
         if settings.slo_disabled? || saml_settings.idp_slo_target_url.nil?
-          reset_session
+          session.destroy
           redirect_to after_logout_url
         else
           logout_request = OneLogin::RubySaml::Logoutrequest.new()
@@ -96,7 +96,7 @@ module SimpleSaml
         logout_response = OneLogin::RubySaml::Logoutresponse.new(params[:SAMLResponse], saml_settings, matches_request_id: session[:logout_request_id], get_params: params)
 
         if logout_response.validate && logout_response.success?
-          reset_session
+          session.destroy
           redirect_to url_by_relay_state || after_logout_url
         else
           render_logout_failure(logout_response.errors)
@@ -110,7 +110,7 @@ module SimpleSaml
         if !logout_request.is_valid?
           render_logout_failure(logout_request.errors)
         else
-          reset_session
+          session.destroy
           logout_response = OneLogin::RubySaml::SloLogoutresponse.new.create(saml_settings, logout_request.id, nil, RelayState: params[:RelayState])
           redirect_to logout_response
         end
