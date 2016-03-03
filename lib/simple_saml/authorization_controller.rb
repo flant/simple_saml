@@ -176,7 +176,7 @@ module SimpleSaml
           unauthenticated
         else
           @current_user = SimpleSaml.user_class
-            .where(SimpleSaml.user_key => session[:user].try(:[], SimpleSaml.user_key.to_s)).first
+            .where(SimpleSaml.user_key => session[:user].try(:[], SimpleSaml.user_key.to_s).to_s).first
           unauthenticated unless @current_user
         end
       end
