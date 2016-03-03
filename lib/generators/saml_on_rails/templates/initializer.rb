@@ -5,6 +5,8 @@ SamlOnRails.config do |conf|
     # conf.field :email, to: :e_mail, multiple: false, convert: ->(o) { o.gsub(/site\.net/, "site.com") }
   end
 
+  # conf.session_expire_after = 20.minutes
+
   ### Configure user model
   # conf.user_class = User
 

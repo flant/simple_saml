@@ -30,6 +30,10 @@ module SamlOnRails
 
         if response.is_valid?
           session[:nameid] = response.nameid
+          session[:idp_session_expires_at] = response.session_expires_at if response.session_expires_at.present?
+          session[:idp_session] = response.sessionindex if response.sessionindex.present?
+          session[:remote_addr] = request.ip
+
           handle_sso_response(response)
 
           # TODO: add extra param that will prevent infinite redirect
@@ -59,6 +63,9 @@ module SamlOnRails
         else
           logout_request = OneLogin::RubySaml::Logoutrequest.new()
           session[:transaction_id] = logout_request.uuid
+
+          saml_settings = saml_settings.dup
+          saml_settings.sessionindex = session[:idp_session] if session.key?('idp_session')
 
           unless saml_settings.name_identifier_value.present?
             saml_settings.name_identifier_value = session[:nameid]
@@ -151,6 +158,7 @@ module SamlOnRails
     included do
       protect_from_forgery with: :exception
       before_action :authenticate
+      before_action :check_ip_and_expiration
 
 
       def authenticate
@@ -163,7 +171,7 @@ module SamlOnRails
       end
 
       def unauthenticated
-        ralay_path = params[:path] if params[:path] && params[:path]!=sso_saml_path
+        ralay_path = params[:path] if params[:path] && params[:path] != sso_saml_path
 
         query_params = params.to_h.except(:path, :controller, :action)
         ralay_path += "?" + CGI.unescape(query_params.to_query) if ralay_path && !query_params.blank?
@@ -172,6 +180,14 @@ module SamlOnRails
         redirect_to sso_saml_path(path: ralay_path)
       end
 
+      def check_ip_and_expiration
+        request.session_options[:expire_after] = SamlOnRails.session_expire_after
+        if session.key?(:remote_addr) && session[:remote_addr] != request.ip
+          session.destroy
+        elsif session.key?(:idp_session_expires_at) && session[:idp_session_expires_at] <= Time.now.to_i
+          session.destroy
+        end
+      end
     end
   end
 end
