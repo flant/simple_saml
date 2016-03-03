@@ -5,6 +5,8 @@ module SimpleSaml
     extend ActiveSupport::Concern
     included do
       skip_before_action :verify_authenticity_token, only: [:acs, :logout]
+      skip_before_action :authenticate, except: [:logout]
+      skip_before_action :check_ip_and_expiration, except: [:logout]
 
       ## Login
 
@@ -18,7 +20,6 @@ module SimpleSaml
 
           case saml_settings.idp_sso_target_binding
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-
             render "simple_saml/sso_post", locals: { saml_settings: saml_settings, request_params: saml_request.create_params(saml_settings, extra_params) }, layout: false
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
             redirect_to saml_request.create(saml_settings, extra_params)
@@ -54,6 +55,8 @@ module SimpleSaml
       ## Logout
 
       def logout
+        return render_logout_failure("Logout failed") unless session[:nameid].present?
+
         if settings.slo_disabled? || saml_settings.idp_slo_target_url.nil?
           reset_session
           redirect_to after_logout_url
@@ -79,6 +82,8 @@ module SimpleSaml
       end
 
       def sls
+        return render_logout_failure("SLS failed") unless session[:nameid].present?
+
         if params[:SAMLRequest] # IdP initiated logout
           return idp_logout_request
         elsif params[:SAMLResponse]
@@ -125,7 +130,7 @@ module SimpleSaml
       def handle_sso_response(response)
         attrs = SimpleSaml::ResponseHandler.normalize_attributes(response.attributes.to_h)
         session[:user] = { SimpleSaml.user_key.to_s => attrs[SimpleSaml.user_key.to_s] }
-        @current_user = SimpleSaml.user_class.handle_user_data(response.nameid, attrs)
+        @current_user = SimpleSaml.user_class.handle_user_data(attrs)
       end
 
       def settings
@@ -160,17 +165,18 @@ module SimpleSaml
 
   module ApplicationController
     extend ActiveSupport::Concern
+
     included do
       protect_from_forgery with: :exception
       before_action :authenticate
       before_action :check_ip_and_expiration
 
-
       def authenticate
         if session[:user].blank?
           unauthenticated
         else
-          @current_user = SimpleSaml.user_class.where(SimpleSaml.user_key => session[:user].try(:[], SimpleSaml.user_key.to_s)).first
+          @current_user = SimpleSaml.user_class
+            .where(SimpleSaml.user_key => session[:user].try(:[], SimpleSaml.user_key.to_s)).first
           unauthenticated unless @current_user
         end
       end

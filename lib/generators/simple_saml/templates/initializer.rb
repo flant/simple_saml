@@ -1,8 +1,10 @@
 SimpleSaml.config do |conf|
   ### Configure attributes, passed to User model
-  response_fields do |c|
-    # conf.field :first_name, multiple: false
-    # conf.field :email, to: :e_mail, multiple: false, convert: ->(o) { o.gsub(/site\.net/, "site.com") }
+  conf.response_fields do |c|
+    # c.field :uuid
+    # c.field :first_name
+    # c.field :email, to: :e_mail, convert: ->(o) { o.gsub(/site\.net/, "site.com") }
+    # c.field :tel_numbers, multiple: true
   end
 
   # conf.session_expire_after = 20.minutes
