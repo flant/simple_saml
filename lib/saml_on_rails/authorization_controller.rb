@@ -54,8 +54,6 @@ module SamlOnRails
       ## Logout
 
       def logout
-        return render_logout_failure("Logout failed") unless session[:nameid].present?
-
         if settings.slo_disabled? || saml_settings.idp_slo_target_url.nil?
           reset_session
           redirect_to after_logout_url
@@ -63,26 +61,24 @@ module SamlOnRails
           logout_request = OneLogin::RubySaml::Logoutrequest.new()
           session[:logout_request_id] = logout_request.uuid
 
-          saml_settings = saml_settings.dup
-          saml_settings.sessionindex = session[:idp_session] if session.key?(:idp_session)
+          s_settings = saml_settings.dup
+          s_settings.sessionindex = session[:idp_session] if session.key?(:idp_session)
 
-          unless saml_settings.name_identifier_value.present?
-            saml_settings.name_identifier_value = session[:nameid]
+          unless s_settings.name_identifier_value.present?
+            s_settings.name_identifier_value = session[:nameid]
           end
 
-          case saml_settings.idp_sso_target_binding
+          case s_settings.idp_sso_target_binding
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
             extra_params = { :RelayState => request.referer }
-            render "saml_on_rails/slo_post", locals: { saml_settings: saml_settings, request_params: logout_request.create_params(saml_settings, extra_params) }, layout: false
+            render "saml_on_rails/slo_post", locals: { saml_settings: s_settings, request_params: logout_request.create_params(s_settings, extra_params) }, layout: false
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
-            redirect_to logout_request.create(saml_settings, RelayState: after_logout_url)
+            redirect_to logout_request.create(s_settings, RelayState: after_logout_url)
           end
         end
       end
 
       def sls
-        return render_logout_failure('SLS failed') unless session[:nameid].present?
-
         if params[:SAMLRequest] # IdP initiated logout
           return idp_logout_request
         elsif params[:SAMLResponse]
