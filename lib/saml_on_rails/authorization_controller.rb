@@ -6,19 +6,22 @@ module SamlOnRails
     included do
       skip_before_action :verify_authenticity_token, only: [:acs, :logout]
 
+      ## Login
+
       def sso
         if session['nameid']
           redirect_to request.referer || after_login_url
         else
-          request = OneLogin::RubySaml::Authrequest.new
+          saml_request = OneLogin::RubySaml::Authrequest.new
           extra_params = {}
-          extra_params[:RelayState] = params[:path] unless params[:path].blank?
+          extra_params[:RelayState] = request.referer if request.referer.present?
 
           case saml_settings.idp_sso_target_binding
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-            render "saml_on_rails/sso_post", locals: { saml_settings: saml_settings, request_params: request.create_params(saml_settings, extra_params) }, layout: false
+
+            render "saml_on_rails/sso_post", locals: { saml_settings: saml_settings, request_params: saml_request.create_params(saml_settings, extra_params) }, layout: false
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
-            redirect_to request.create(saml_settings, extra_params)
+            redirect_to saml_request.create(saml_settings, extra_params)
           else
             render_authorization_failure("unknown binding")
           end
@@ -29,6 +32,7 @@ module SamlOnRails
         response = OneLogin::RubySaml::Response.new(params[:SAMLResponse], settings: saml_settings)
 
         if response.is_valid?
+          session.destroy
           session[:nameid] = response.nameid
           session[:idp_session_expires_at] = response.session_expires_at if response.session_expires_at.present?
           session[:idp_session] = response.sessionindex if response.sessionindex.present?
@@ -47,25 +51,20 @@ module SamlOnRails
         render xml: saml_metadata
       end
 
-      def sls
-        if params[:SAMLRequest] # IdP initiated logout
-          return idp_logout_request
-        elsif params[:SAMLResponse]
-          return process_logout_response
-        end
-      end
+      ## Logout
 
-      # SLO or simple logout
       def logout
+        return render_logout_failure("Logout failed") unless session[:nameid].present?
+
         if settings.slo_disabled? || saml_settings.idp_slo_target_url.nil?
           reset_session
           redirect_to after_logout_url
         else
           logout_request = OneLogin::RubySaml::Logoutrequest.new()
-          session[:transaction_id] = logout_request.uuid
+          session[:logout_request_id] = logout_request.uuid
 
           saml_settings = saml_settings.dup
-          saml_settings.sessionindex = session[:idp_session] if session.key?('idp_session')
+          saml_settings.sessionindex = session[:idp_session] if session.key?(:idp_session)
 
           unless saml_settings.name_identifier_value.present?
             saml_settings.name_identifier_value = session[:nameid]
@@ -81,8 +80,18 @@ module SamlOnRails
         end
       end
 
+      def sls
+        return render_logout_failure('SLS failed') unless session[:nameid].present?
+
+        if params[:SAMLRequest] # IdP initiated logout
+          return idp_logout_request
+        elsif params[:SAMLResponse]
+          return process_logout_response
+        end
+      end
+
       def process_logout_response
-        logout_response = OneLogin::RubySaml::Logoutresponse.new(params[:SAMLResponse], saml_settings, matches_request_id: session[:transaction_id], get_params: params)
+        logout_response = OneLogin::RubySaml::Logoutresponse.new(params[:SAMLResponse], saml_settings, matches_request_id: session[:logout_request_id], get_params: params)
 
         if logout_response.validate && logout_response.success?
           reset_session
@@ -113,7 +122,7 @@ module SamlOnRails
 
       def url_by_relay_state
         if params[:RelayState].present?
-          return '/' + CGI.unescape(params[:RelayState])
+          return CGI.unescape(params[:RelayState])
         end
       end
 
