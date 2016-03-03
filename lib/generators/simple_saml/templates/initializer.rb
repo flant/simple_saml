@@ -1,4 +1,4 @@
-SamlOnRails.config do |conf|
+SimpleSaml.config do |conf|
   ### Configure attributes, passed to User model
   response_fields do |c|
     # conf.field :first_name, multiple: false

@@ -1,6 +1,6 @@
 require_relative 'settings'
 
-module SamlOnRails
+module SimpleSaml
   module AuthorizationController
     extend ActiveSupport::Concern
     included do
@@ -19,7 +19,7 @@ module SamlOnRails
           case saml_settings.idp_sso_target_binding
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
 
-            render "saml_on_rails/sso_post", locals: { saml_settings: saml_settings, request_params: saml_request.create_params(saml_settings, extra_params) }, layout: false
+            render "simple_saml/sso_post", locals: { saml_settings: saml_settings, request_params: saml_request.create_params(saml_settings, extra_params) }, layout: false
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
             redirect_to saml_request.create(saml_settings, extra_params)
           else
@@ -71,7 +71,7 @@ module SamlOnRails
           case s_settings.idp_sso_target_binding
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
             extra_params = { :RelayState => request.referer }
-            render "saml_on_rails/slo_post", locals: { saml_settings: s_settings, request_params: logout_request.create_params(s_settings, extra_params) }, layout: false
+            render "simple_saml/slo_post", locals: { saml_settings: s_settings, request_params: logout_request.create_params(s_settings, extra_params) }, layout: false
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
             redirect_to logout_request.create(s_settings, RelayState: after_logout_url)
           end
@@ -123,13 +123,13 @@ module SamlOnRails
       end
 
       def handle_sso_response(response)
-        attrs = SamlOnRails::ResponseHandler.normalize_attributes(response.attributes.to_h)
-        session[:user] = { SamlOnRails.user_key.to_s => attrs[SamlOnRails.user_key.to_s] }
-        @current_user = SamlOnRails.user_class.handle_user_data(response.nameid, attrs)
+        attrs = SimpleSaml::ResponseHandler.normalize_attributes(response.attributes.to_h)
+        session[:user] = { SimpleSaml.user_key.to_s => attrs[SimpleSaml.user_key.to_s] }
+        @current_user = SimpleSaml.user_class.handle_user_data(response.nameid, attrs)
       end
 
       def settings
-        @@settings ||= SamlOnRails::Settings.new(request)
+        @@settings ||= SimpleSaml::Settings.new(request)
       end
 
       def saml_settings
@@ -170,7 +170,7 @@ module SamlOnRails
         if session[:user].blank?
           unauthenticated
         else
-          @current_user = SamlOnRails.user_class.where(SamlOnRails.user_key => session[:user].try(:[], SamlOnRails.user_key.to_s)).first
+          @current_user = SimpleSaml.user_class.where(SimpleSaml.user_key => session[:user].try(:[], SimpleSaml.user_key.to_s)).first
           unauthenticated unless @current_user
         end
       end
@@ -186,7 +186,7 @@ module SamlOnRails
       end
 
       def check_ip_and_expiration
-        request.session_options[:expire_after] = SamlOnRails.session_expire_after
+        request.session_options[:expire_after] = SimpleSaml.session_expire_after
         if session.key?(:remote_addr) && session[:remote_addr] != request.ip
           session.destroy
         elsif session.key?(:idp_session_expires_at) && session[:idp_session_expires_at] <= Time.now.to_i
@@ -200,11 +200,11 @@ end
 if defined? ActionController::Base
   ActionController::Base.class_eval do
     def self.saml_unauthorized_controller
-      include SamlOnRails::AuthorizationController
+      include SimpleSaml::AuthorizationController
     end
 
     def self.authorize_with_saml
-      include SamlOnRails::ApplicationController
+      include SimpleSaml::ApplicationController
     end
   end
 end

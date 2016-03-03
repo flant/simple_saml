@@ -1,4 +1,4 @@
-module SamlOnRails
+module SimpleSaml
   module RoutingMapper
 
     def saml_authorization(name, params={})
@@ -18,6 +18,6 @@ end
 
 if defined? ActionDispatch::Routing::Mapper
   ActionDispatch::Routing::Mapper.class_eval do
-    include SamlOnRails::RoutingMapper
+    include SimpleSaml::RoutingMapper
   end
 end

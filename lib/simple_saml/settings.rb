@@ -1,4 +1,4 @@
-module SamlOnRails
+module SimpleSaml
   class Settings
     attr_reader :saml_settings, :base_url
 

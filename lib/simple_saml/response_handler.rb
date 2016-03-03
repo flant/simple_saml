@@ -1,4 +1,4 @@
-module SamlOnRails
+module SimpleSaml
   module ResponseHandler
     @@fields = []
 

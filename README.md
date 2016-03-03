@@ -1,1 +1,1 @@
-# saml_on_rails
+# simple_saml
