@@ -74,7 +74,7 @@ module SimpleSaml
 
           case s_settings.idp_sso_target_binding
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-            extra_params = { :RelayState => request.referer }
+            extra_params = { :RelayState => after_logout_url }
             render "simple_saml/slo_post", locals: { saml_settings: s_settings, request_params: logout_request.create_params(s_settings, extra_params) }, layout: false
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
             redirect_to logout_request.create(s_settings, RelayState: after_logout_url)
@@ -83,8 +83,6 @@ module SimpleSaml
       end
 
       def sls
-        return render_logout_failure("SLS failed") unless session[:nameid].present?
-
         if params[:SAMLRequest] # IdP initiated logout
           return idp_logout_request
         elsif params[:SAMLResponse]

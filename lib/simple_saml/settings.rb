@@ -18,7 +18,7 @@ module SimpleSaml
       @saml_settings.issuer                                = @base_url + "/saml/metadata"
       @saml_settings.assertion_consumer_service_url        = @base_url + "/saml/acs"
       @saml_settings.assertion_consumer_logout_service_url = @base_url + "/saml/logout"
-      @saml_settings.single_logout_service_url             = @base_url + 'saml/sls'
+      @saml_settings.single_logout_service_url             = @base_url + '/saml/sls'
 
       @saml_settings.assertion_consumer_service_binding = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
       @saml_settings.single_logout_service_binding = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
@@ -55,7 +55,11 @@ module SimpleSaml
     protected
 
     def get_setting(key, default = nil)
-      ENV.fetch("saml_#{key}".upcase) { default }
+      val = ENV.fetch("saml_#{key}".upcase) { default }
+      if val.in? ['true', 'false']
+        val = val == 'true' ? true : false
+      end
+      val
     end
   end
 end
