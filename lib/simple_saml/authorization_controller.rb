@@ -39,10 +39,11 @@ module SimpleSaml
           session[:idp_session] = response.sessionindex if response.sessionindex.present?
           session[:remote_addr] = request.ip
 
-          handle_sso_response(response)
-
-          # TODO: add extra param that will prevent infinite redirect
-          redirect_to url_by_relay_state || after_login_url
+          if handle_sso_response(response)
+            redirect_to url_by_relay_state || after_login_url
+          else
+            render_authorization_failure('Cannot create or update user')
+          end
         else
           render_authorization_failure(response.errors)
         end
@@ -150,15 +151,11 @@ module SimpleSaml
       end
 
       def render_authorization_failure(errors="")
-        raise NotImplementedError.new
+        render status: 401, json: { error: errors }, layout: false
       end
 
       def render_logout_failure(errors="")
-        raise NotImplementedError.new
-      end
-
-      def render_logout_failure(errors="")
-        render status: 404, json: {error: errors}, layout: false
+        render status: 401, json: { error: errors }, layout: false
       end
     end
   end
@@ -205,6 +202,16 @@ end
 
 if defined? ActionController::Base
   ActionController::Base.class_eval do
+    def self.saml_unauthorized_controller
+      include SimpleSaml::AuthorizationController
+    end
+
+    def self.authorize_with_saml
+      include SimpleSaml::ApplicationController
+    end
+  end
+
+  ActionController::API.class_eval do
     def self.saml_unauthorized_controller
       include SimpleSaml::AuthorizationController
     end
