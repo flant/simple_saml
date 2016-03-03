@@ -11,7 +11,7 @@ module SimpleSaml
       ## Login
 
       def sso
-        if session['nameid']
+        if session['nameid'] && @current_user
           redirect_to request.referer || after_login_url
         else
           saml_request = OneLogin::RubySaml::Authrequest.new
@@ -169,11 +169,13 @@ module SimpleSaml
       before_action :check_ip_and_expiration
 
       def authenticate
-        if session[:user].blank?
+        user_id = session[:user].try(:[], SimpleSaml.user_key.to_s)
+
+        unless user_id.present?
           unauthenticated
         else
           @current_user = SimpleSaml.user_class
-            .where(SimpleSaml.user_key => session[:user].try(:[], SimpleSaml.user_key.to_s).to_s).first
+            .where(SimpleSaml.user_key => user_id).first
           unauthenticated unless @current_user
         end
       end
