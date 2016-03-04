@@ -9,6 +9,7 @@ module SimpleSaml
           post :sls
           get :metadata
           get :logout
+          get 'fakelogin/:id', action: 'fakelogin'
         end
       end
     end

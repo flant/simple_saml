@@ -52,6 +52,11 @@ module SimpleSaml
       @slo_disabled ||= get_setting(:slo_disabled, false)
     end
 
+    def fake_users
+      users = get_setting(:fake_users, '{}')
+      JSON.parse users
+    end
+
     protected
 
     def get_setting(key, default = nil)

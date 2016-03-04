@@ -10,6 +10,31 @@ module SimpleSaml
 
       ## Login
 
+      def fakelogin
+        if session['nameid'] && @current_user
+          redirect_to request.referer || after_login_url
+        else
+          users = settings.fake_users
+          if users.any? && users[params[:id]]
+            user = users[params[:id]]
+            session.destroy
+            session[:nameid] = user["nameid"]
+            session[:idp_session_expires_at] = user["idp_session_expires_at"]
+            session[:remote_addr] = request.ip
+            session[:fake_user] = true
+
+            if @current_user = SimpleSaml.user_class.handle_user_data(user["attributes"])
+              session[:user] = { SimpleSaml.user_key.to_s => user["attributes"][SimpleSaml.user_key.to_s] }
+              redirect_to after_login_url
+            else
+              render_authorization_failure('Fakelogin error: provided user is not valid')
+            end
+          else
+            render_authorization_failure("Fakelogin error: fake user not found")
+          end
+        end
+      end
+
       def sso
         if session['nameid'] && @current_user
           redirect_to request.referer || after_login_url
@@ -58,7 +83,7 @@ module SimpleSaml
       def logout
         return render_logout_failure("Logout failed") unless session[:nameid].present?
 
-        if settings.slo_disabled? || saml_settings.idp_slo_target_url.nil?
+        if settings.slo_disabled? || saml_settings.idp_slo_target_url.nil? || session[:fake_user]
           session.destroy
           redirect_to after_logout_url
         else
