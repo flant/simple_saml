@@ -15,6 +15,11 @@ module SimpleSaml
     yield self
   end
 
+  def self.user_class
+    @@user_class = @@user_class.constantize if @@user_class.is_a?(String)
+    @@user_class
+  end
+
   def self.response_fields
     yield SimpleSaml::ResponseHandler
   end
