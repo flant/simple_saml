@@ -187,13 +187,10 @@ module SimpleSaml
     extend ActiveSupport::Concern
 
     included do
+      attr_reader :current_user
       protect_from_forgery with: :exception
       before_action :authenticate
       before_action :check_ip_and_expiration
-
-      def current_user
-        @current_user
-      end
 
       def authenticate
         user_id = session[:user].try(:[], SimpleSaml.user_key.to_s)
