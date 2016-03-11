@@ -191,6 +191,10 @@ module SimpleSaml
       before_action :authenticate
       before_action :check_ip_and_expiration
 
+      def current_user
+        @current_user
+      end
+
       def authenticate
         user_id = session[:user].try(:[], SimpleSaml.user_key.to_s)
 
