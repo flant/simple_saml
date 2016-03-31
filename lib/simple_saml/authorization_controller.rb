@@ -23,7 +23,9 @@ module SimpleSaml
             session[:remote_addr] = request.ip
             session[:fake_user] = true
 
-            if @current_user = SimpleSaml.user_class.handle_user_data(user["attributes"])
+            attrs = SimpleSaml::ResponseHandler.normalize_attributes(user["attributes"])
+
+            if @current_user = SimpleSaml.user_class.handle_user_data(attrs)
               session[:user] = { SimpleSaml.user_key.to_s => user["attributes"][SimpleSaml.user_key.to_s] }
               redirect_to after_login_url
             else
@@ -191,6 +193,8 @@ module SimpleSaml
       protect_from_forgery with: :exception
       before_action :authenticate
       before_action :check_ip_and_expiration
+
+      helper_method :current_user
 
       def authenticate
         user_id = session[:user].try(:[], SimpleSaml.user_key.to_s)
