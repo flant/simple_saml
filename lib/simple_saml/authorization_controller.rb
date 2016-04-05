@@ -38,7 +38,7 @@ module SimpleSaml
       end
 
       def sso
-        redirect_path = request.referer || (params[:path] && CGI.unescape(params[:path])) || after_login_url
+        redirect_path = (params[:path] && CGI.unescape(params[:path])) || after_login_url
 
         if session['nameid'] && @current_user
           redirect_to redirect_path
