@@ -38,12 +38,14 @@ module SimpleSaml
       end
 
       def sso
+        redirect_path = request.referer || (params[:path] && CGI.unescape(params[:path])) || after_login_url
+
         if session['nameid'] && @current_user
-          redirect_to request.referer || after_login_url
+          redirect_to redirect_path
         else
           saml_request = OneLogin::RubySaml::Authrequest.new
           extra_params = {}
-          extra_params[:RelayState] = request.referer if request.referer.present?
+          extra_params[:RelayState] = CGI.escape(redirect_path)
 
           case saml_settings.idp_sso_target_binding
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
@@ -198,7 +200,6 @@ module SimpleSaml
 
       def authenticate
         user_id = session[:user].try(:[], SimpleSaml.user_key.to_s)
-
         unless user_id.present?
           unauthenticated
         else
@@ -209,13 +210,12 @@ module SimpleSaml
       end
 
       def unauthenticated
-        ralay_path = params[:path] if params[:path] && params[:path] != sso_saml_path
+        relay_path = params[:path] if params[:path] && params[:path] != sso_saml_path
 
-        query_params = params.to_h.except(:path, :controller, :action)
-        ralay_path += "?" + CGI.unescape(query_params.to_query) if ralay_path && !query_params.blank?
-
-        ralay_path = CGI.escape(ralay_path) if ralay_path
-        redirect_to sso_saml_path(path: ralay_path)
+        query_params = params.to_unsafe_h.except(:path, :controller, :action)
+        relay_path += "?" + CGI.unescape(query_params.to_query) if relay_path && !query_params.blank?
+        relay_path = CGI.escape('/' + relay_path) if relay_path
+        redirect_to sso_saml_path(path: relay_path)
       end
 
       def check_ip_and_expiration
