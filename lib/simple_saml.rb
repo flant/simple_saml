@@ -15,9 +15,12 @@ module SimpleSaml
     yield self
   end
 
+  def self.user_class=(val)
+    @@user_class = val.to_s
+  end
+
   def self.user_class
-    @@user_class = @@user_class.constantize if @@user_class.is_a?(String)
-    @@user_class
+    @@user_class.constantize
   end
 
   def self.response_fields
