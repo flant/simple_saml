@@ -212,7 +212,7 @@ module SimpleSaml
 
       def unauthenticated
         if request.xhr?
-          raise SimpleSaml::UnauthenticatedError.new
+          raise SimpleSaml::UnauthenticatedError
         else
           relay_path = params[:path] if params[:path] && params[:path] != sso_saml_path
 
