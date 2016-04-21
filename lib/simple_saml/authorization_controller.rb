@@ -1,4 +1,5 @@
 require_relative 'settings'
+require_relative 'unauthenticated_error'
 
 module SimpleSaml
   module AuthorizationController
@@ -210,12 +211,16 @@ module SimpleSaml
       end
 
       def unauthenticated
-        relay_path = params[:path] if params[:path] && params[:path] != sso_saml_path
+        if request.xhr?
+          raise SimpleSaml::UnauthenticatedError.new
+        else
+          relay_path = params[:path] if params[:path] && params[:path] != sso_saml_path
 
-        query_params = params.to_unsafe_h.except(:path, :controller, :action)
-        relay_path += "?" + CGI.unescape(query_params.to_query) if relay_path && !query_params.blank?
-        relay_path = CGI.escape('/' + relay_path) if relay_path
-        redirect_to sso_saml_path(path: relay_path)
+          query_params = params.to_unsafe_h.except(:path, :controller, :action)
+          relay_path += "?" + CGI.unescape(query_params.to_query) if relay_path && !query_params.blank?
+          relay_path = CGI.escape('/' + relay_path) if relay_path
+          redirect_to sso_saml_path(path: relay_path)
+        end
       end
 
       def check_ip_and_expiration
