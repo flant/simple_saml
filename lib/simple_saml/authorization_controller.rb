@@ -211,15 +211,15 @@ module SimpleSaml
       end
 
       def unauthenticated
-        if request.xhr?
-          raise SimpleSaml::UnauthenticatedError
-        else
+        if request.format.html?
           relay_path = params[:path] if params[:path] && params[:path] != sso_saml_path
 
           query_params = params.to_unsafe_h.except(:path, :controller, :action)
           relay_path += "?" + CGI.unescape(query_params.to_query) if relay_path && !query_params.blank?
           relay_path = CGI.escape('/' + relay_path) if relay_path
           redirect_to sso_saml_path(path: relay_path)
+        else
+          raise SimpleSaml::UnauthenticatedError
         end
       end
 
