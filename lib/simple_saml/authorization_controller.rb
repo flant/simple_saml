@@ -12,8 +12,10 @@ module SimpleSaml
       ## Login
 
       def fakelogin
+        redirect_path = (params[:path] && CGI.unescape(params[:path])) || after_login_url
+
         if session['nameid'] && @current_user
-          redirect_to request.referer || after_login_url
+          redirect_to redirect_path
         else
           users = settings.fake_users
           if users.any? && users[params[:id]]
@@ -28,7 +30,7 @@ module SimpleSaml
 
             if @current_user = SimpleSaml.user_class.handle_user_data(attrs)
               session[:user] = { SimpleSaml.user_key.to_s => user["attributes"][SimpleSaml.user_key.to_s] }
-              redirect_to after_login_url
+              redirect_to redirect_path
             else
               render_authorization_failure('Fakelogin error: provided user is not valid')
             end
