@@ -29,7 +29,10 @@ module SimpleSaml
             attrs = SimpleSaml::ResponseHandler.normalize_attributes(user["attributes"])
 
             if @current_user = SimpleSaml.user_class.handle_user_data(attrs)
-              session[:user] = { SimpleSaml.user_key.to_s => user["attributes"][SimpleSaml.user_key.to_s] }
+              saml_id = user["attributes"][SimpleSaml.saml_user_key.to_s]
+              return render_authorization_failure('Fakelogin error: incorrect saml_user_key') unless saml_id
+
+              session[:user] = { SimpleSaml.user_key.to_s => saml_id }
               redirect_to redirect_path
             else
               render_authorization_failure('Fakelogin error: provided user is not valid')
@@ -160,7 +163,11 @@ module SimpleSaml
 
       def handle_sso_response(response)
         attrs = SimpleSaml::ResponseHandler.normalize_attributes(response.attributes.to_h)
-        session[:user] = { SimpleSaml.user_key.to_s => attrs[SimpleSaml.user_key.to_s] }
+
+        saml_id = attrs[SimpleSaml.saml_user_key.to_s]
+        return false unless saml_id
+
+        session[:user] = { SimpleSaml.user_key.to_s => saml_id }
         @current_user = SimpleSaml.user_class.handle_user_data(attrs)
       end
 

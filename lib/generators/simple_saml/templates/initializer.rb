@@ -15,4 +15,8 @@ SimpleSaml.config do |conf|
   ### Configure user primary key
   ### default value is :uuid
   # conf.user_key = :id
+
+  ### Configure saml primary key
+  ### default value is like user_key
+  # conf.saml_user_key = :uuid
 end
