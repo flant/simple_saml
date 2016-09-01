@@ -202,7 +202,6 @@ module SimpleSaml
 
     included do
       attr_reader :current_user
-      protect_from_forgery with: :exception
       before_action :authenticate
       before_action :check_ip_and_expiration
 
