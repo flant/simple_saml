@@ -168,7 +168,8 @@ module SimpleSaml
         return false unless saml_id
 
         session[:user] = { SimpleSaml.user_key.to_s => saml_id }
-        @current_user = SimpleSaml.user_class.handle_user_data(attrs)
+
+        setup_current_user(SimpleSaml.user_class.handle_user_data(attrs))
       end
 
       def settings
@@ -177,6 +178,10 @@ module SimpleSaml
 
       def saml_settings
         self.settings.saml_settings
+      end
+
+      def setup_current_user
+        @current_user = SimpleSaml.user_class.handle_user_data(attrs)
       end
 
       def after_login_url
