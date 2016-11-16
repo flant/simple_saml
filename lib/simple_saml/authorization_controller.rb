@@ -180,8 +180,8 @@ module SimpleSaml
         self.settings.saml_settings
       end
 
-      def setup_current_user
-        @current_user = SimpleSaml.user_class.handle_user_data(attrs)
+      def setup_current_user(user)
+        @current_user = user
       end
 
       def after_login_url
