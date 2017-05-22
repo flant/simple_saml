@@ -4,12 +4,13 @@ require_relative 'simple_saml/routing_mapper'
 require_relative 'simple_saml/response_handler'
 
 module SimpleSaml
-  mattr_accessor :user_class, :user_key, :saml_user_key, :session_expire_after
+  mattr_accessor :user_class, :user_key, :saml_user_key, :session_expire_after, :logout_on_ip_change
 
   @@user_class = nil
   @@user_key = :uuid
   @@saml_user_key = nil
   @@session_expire_after = 20.minutes
+  @@logout_on_ip_change = true
 
   def self.config
     @@configured = true

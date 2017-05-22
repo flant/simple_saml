@@ -241,7 +241,7 @@ module SimpleSaml
 
       def check_ip_and_expiration
         request.session_options[:expire_after] = SimpleSaml.session_expire_after
-        if session.key?(:remote_addr) && session[:remote_addr] != request.ip
+        if SimpleSaml.logout_on_ip_change && session.key?(:remote_addr) && session[:remote_addr] != request.ip
           session.destroy
         elsif session.key?(:idp_session_expires_at) && session[:idp_session_expires_at] <= Time.now.to_i
           session.destroy
