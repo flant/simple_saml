@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    simple_saml (0.0.15)
+    simple_saml (0.0.16)
       rails (>= 5.0.0.beta2, < 5.1)
 
 GEM

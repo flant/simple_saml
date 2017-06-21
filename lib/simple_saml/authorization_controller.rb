@@ -207,8 +207,8 @@ module SimpleSaml
 
     included do
       attr_reader :current_user
-      before_action :authenticate
       before_action :check_ip_and_expiration
+      before_action :authenticate
 
       helper_method :current_user
 
