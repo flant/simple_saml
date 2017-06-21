@@ -23,7 +23,7 @@ module SimpleSaml
             session.destroy
             session[:nameid] = user["nameid"]
             session[:idp_session_expires_at] = user["idp_session_expires_at"]
-            session[:remote_addr] = request.ip
+            session[:remote_addr] = request.remote_ip
             session[:fake_user] = true
 
             attrs = SimpleSaml::ResponseHandler.normalize_attributes(user["attributes"])
@@ -72,7 +72,7 @@ module SimpleSaml
           session[:nameid] = response.nameid
           session[:idp_session_expires_at] = response.session_expires_at if response.session_expires_at.present?
           session[:idp_session] = response.sessionindex if response.sessionindex.present?
-          session[:remote_addr] = request.ip
+          session[:remote_addr] = request.remote_ip
 
           if handle_sso_response(response)
             redirect_to url_by_relay_state || after_login_url
@@ -241,7 +241,7 @@ module SimpleSaml
 
       def check_ip_and_expiration
         request.session_options[:expire_after] = SimpleSaml.session_expire_after
-        if SimpleSaml.logout_on_ip_change && session.key?(:remote_addr) && session[:remote_addr] != request.ip
+        if SimpleSaml.logout_on_ip_change && session.key?(:remote_addr) && session[:remote_addr] != request.remote_ip
           session.destroy
         elsif session.key?(:idp_session_expires_at) && session[:idp_session_expires_at] <= Time.now.to_i
           session.destroy
