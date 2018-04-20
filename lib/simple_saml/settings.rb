@@ -1,6 +1,6 @@
 module SimpleSaml
   class Settings
-    attr_reader :saml_settings, :base_url
+    attr_reader :saml_settings, :base_url, :saml_sso_target_binding, :saml_slo_target_binding
 
     def initialize(request)
       setup_base_url(request)
@@ -39,14 +39,17 @@ module SimpleSaml
 
       # IDP section
       priority = ['urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST', 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']
-      @saml_settings.idp_sso_target_parse_binding_priority = priority
-      @saml_settings.idp_slo_target_parse_binding_priority = priority
 
       idp_metadata_parser = OneLogin::RubySaml::IdpMetadataParser.new
-      @saml_settings = idp_metadata_parser.parse_remote(get_setting(:idp_metadata_url), true, settings: @saml_settings)
+      @saml_settings = idp_metadata_parser.parse_remote(get_setting(:idp_metadata_url), true, settings: @saml_settings,
+                                                                                              sso_binding: priority,
+                                                                                              slo_binding: priority)
+      @saml_sso_target_binding = idp_metadata_parser.send(:single_signon_service_binding, priority)
+      @saml_slo_target_binding = idp_metadata_parser.send(:single_logout_service_binding, priority)
 
       @saml_settings
     end
+
 
     def slo_disabled?
       @slo_disabled ||= get_setting(:slo_disabled, false)

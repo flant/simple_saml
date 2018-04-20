@@ -53,7 +53,7 @@ module SimpleSaml
           extra_params = {}
           extra_params[:RelayState] = CGI.escape(redirect_path)
 
-          case saml_settings.idp_sso_target_binding
+          case settings.saml_sso_target_binding
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
             render "simple_saml/sso_post", locals: { saml_settings: saml_settings, request_params: saml_request.create_params(saml_settings, extra_params) }, layout: false
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
@@ -107,7 +107,7 @@ module SimpleSaml
             s_settings.name_identifier_value = session[:nameid]
           end
 
-          case s_settings.idp_sso_target_binding
+          case settings.saml_slo_target_binding
           when "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
             extra_params = { :RelayState => after_logout_url }
             render "simple_saml/slo_post", locals: { saml_settings: s_settings, request_params: logout_request.create_params(s_settings, extra_params) }, layout: false
