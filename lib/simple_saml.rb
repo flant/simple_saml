@@ -1,3 +1,5 @@
+require 'ruby-saml'
+
 require_relative 'simple_saml/engine'
 require_relative 'simple_saml/authorization_controller'
 require_relative 'simple_saml/routing_mapper'

@@ -7,8 +7,8 @@ require "simple_saml/version"
 Gem::Specification.new do |s|
   s.name        = "simple_saml"
   s.version     = SimpleSaml::VERSION
-  s.authors     = ["Serafim Nenarokov"]
-  s.email       = ["serafim.nenarokov@flant.ru"]
+  s.authors     = ['Sergey Gnuskov', 'Serafim Nenarokov']
+  s.email       = ['sergey.gnuskov@flant.com', 'serafim.nenarokov@flant.com']
   s.homepage    = "https://github.com/flant/simple_saml"
   s.summary     = "Summary of SimpleSaml."
   s.description = "Description of SimpleSaml."
