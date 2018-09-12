@@ -10,7 +10,7 @@ SimpleSaml.config do |conf|
   # conf.session_expire_after = 20.minutes
 
   ### Configure user model
-  # conf.user_class = User
+  # conf.default_user_class = User
 
   ### Configure user primary key
   ### default value is :uuid

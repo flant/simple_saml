@@ -6,9 +6,10 @@ require_relative 'simple_saml/routing_mapper'
 require_relative 'simple_saml/response_handler'
 
 module SimpleSaml
-  mattr_accessor :user_class, :user_key, :saml_user_key, :session_expire_after, :logout_on_ip_change
+  mattr_reader :default_user_class
+  mattr_accessor :user_key, :saml_user_key, :session_expire_after, :logout_on_ip_change
 
-  @@user_class = nil
+  @@default_user_class = nil
   @@user_key = :uuid
   @@saml_user_key = nil
   @@session_expire_after = 20.minutes
@@ -20,15 +21,17 @@ module SimpleSaml
   end
 
   def self.user_class=(val)
-    @@user_class = val.to_s
+    warn 'Deprecated method `user_class=` is called, you should use `default_user_class=` instead.'
+
+    self.default_user_class = val
+  end
+
+  def self.default_user_class=(val)
+    @@default_user_class = val.to_s
   end
 
   def self.saml_user_key
     @@saml_user_key || @@user_key
-  end
-
-  def self.user_class
-    @@user_class.constantize
   end
 
   def self.response_fields

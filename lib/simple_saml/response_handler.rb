@@ -2,6 +2,10 @@ module SimpleSaml
   module ResponseHandler
     @@fields = []
 
+    def self.handle_type(type_field = :type)
+      field type_field
+    end
+
     def self.field(name, options={})
       field = {}
       field[:name] = name
