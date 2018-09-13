@@ -243,10 +243,7 @@ module SimpleSaml
 
       helper_method :current_user
 
-      class << self
-        attr_accessor :saml_user_classes
-      end
-
+      class_attribute :saml_user_classes
       delegate :saml_user_classes, to: :class
     end
 
