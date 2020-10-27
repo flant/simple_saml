@@ -4,6 +4,7 @@ require_relative 'simple_saml/engine'
 require_relative 'simple_saml/authorization_controller'
 require_relative 'simple_saml/routing_mapper'
 require_relative 'simple_saml/response_handler'
+require_relative 'simple_saml/idp_metadata_patch'
 
 module SimpleSaml
   mattr_reader :default_user_class
